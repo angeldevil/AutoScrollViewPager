@@ -11,6 +11,7 @@ Usage
  - `startAutoScroll([intervalInMillis])`: Start auto scroll, default interval is 2000ms
  - `stopAutoScroll()`: Stop auto scroll
  - `setScrollFactor(double)`: Control the scroll speed when scrolls automatically
+ - `setOnPageClickListener(AutoScrollViewPager.OnPageClickListener)`: listen for page click
 
 Licence
 =========
