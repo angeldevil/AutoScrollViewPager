@@ -8,12 +8,17 @@ import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
+import android.view.ViewConfiguration;
 import android.view.animation.Interpolator;
 
 import java.lang.reflect.Field;
 
 // TODO add attr support?
 public class AutoScrollViewPager extends ViewPager {
+
+    public interface OnPageClickListener {
+        void onPageClick(AutoScrollViewPager pager, int position);
+    }
 
     private static final int MSG_AUTO_SCROLL = 0;
     private static final int DEFAULT_INTERNAL_IM_MILLIS = 2000;
@@ -26,6 +31,13 @@ public class AutoScrollViewPager extends ViewPager {
 
     private boolean autoScroll = false;
     private int intervalInMillis;
+
+    private float mInitialMotionX;
+    private float mInitialMotionY;
+    private float mLastMotionX;
+    private float mLastMotionY;
+    private int touchSlop;
+    private OnPageClickListener onPageClickListener;
 
     private class H extends Handler {
         @Override
@@ -57,6 +69,7 @@ public class AutoScrollViewPager extends ViewPager {
         super.setOnPageChangeListener(listener);
 
         handler = new H();
+        touchSlop = ViewConfiguration.get(getContext()).getScaledTouchSlop();
     }
 
     @Override
@@ -145,6 +158,14 @@ public class AutoScrollViewPager extends ViewPager {
         return curr;
     }
 
+    public OnPageClickListener getOnPageClickListener() {
+        return onPageClickListener;
+    }
+
+    public void setOnPageClickListener(OnPageClickListener onPageClickListener) {
+        this.onPageClickListener = onPageClickListener;
+    }
+
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
         switch (MotionEventCompat.getActionMasked(ev)) {
@@ -156,6 +177,16 @@ public class AutoScrollViewPager extends ViewPager {
                     setCurrentItem(getCount() - 1, false);
                 }
                 handler.removeMessages(MSG_AUTO_SCROLL);
+                mInitialMotionX = ev.getX();
+                mInitialMotionY = ev.getY();
+                break;
+            case MotionEvent.ACTION_MOVE:
+                mLastMotionX = ev.getX();
+                mLastMotionY = ev.getY();
+                if ((int) Math.abs(mLastMotionX - mInitialMotionX) > touchSlop || (int) Math.abs(mLastMotionY - mInitialMotionY) > touchSlop) {
+                    mInitialMotionX = 0.0f;
+                    mInitialMotionY = 0.0f;
+                }
                 break;
             case MotionEvent.ACTION_UP:
                 getParent().requestDisallowInterceptTouchEvent(false);
@@ -174,6 +205,21 @@ public class AutoScrollViewPager extends ViewPager {
                         }
                     });
                 }
+
+                mLastMotionX = ev.getX();
+                mLastMotionY = ev.getY();
+                if ((int) mInitialMotionX != 0 && (int) mInitialMotionY != 0) {
+                    if ((int) Math.abs(mLastMotionX - mInitialMotionX) < touchSlop
+                            && (int) Math.abs(mLastMotionY - mInitialMotionY) < touchSlop) {
+                        mInitialMotionX = 0.0f;
+                        mInitialMotionY = 0.0f;
+                        mLastMotionX = 0.0f;
+                        mLastMotionY = 0.0f;
+                        if (onPageClickListener != null) {
+                            onPageClickListener.onPageClick(this, getCurrentItem());
+                        }
+                    }
+                }
                 break;
         }
         return super.onTouchEvent(ev);
@@ -186,7 +232,9 @@ public class AutoScrollViewPager extends ViewPager {
         return super.getCurrentItem();
     }
 
-    /** Get item count of the outer wrapper adapter. */
+    /**
+     * Get item count of the outer wrapper adapter.
+     */
     private int getCountOfWrapper() {
         if (wrapperPagerAdapter != null) {
             return wrapperPagerAdapter.getCount();
@@ -194,7 +242,9 @@ public class AutoScrollViewPager extends ViewPager {
         return 0;
     }
 
-    /** Get item count of the adapter which is set by user */
+    /**
+     * Get item count of the adapter which is set by user
+     */
     private int getCount() {
         if (wrappedPagerAdapter != null) {
             return wrappedPagerAdapter.getCount();
@@ -211,7 +261,7 @@ public class AutoScrollViewPager extends ViewPager {
             scrollerField.setAccessible(true);
             Field interpolatorField = ViewPager.class.getDeclaredField("sInterpolator");
             interpolatorField.setAccessible(true);
-            scroller = new AutoScrollFactorScroller(getContext(), (Interpolator)interpolatorField.get(null));
+            scroller = new AutoScrollFactorScroller(getContext(), (Interpolator) interpolatorField.get(null));
             scrollerField.set(this, scroller);
         } catch (Exception e) {
             e.printStackTrace();
@@ -273,15 +323,15 @@ public class AutoScrollViewPager extends ViewPager {
                 // Comment this, onPageSelected will be triggered twice for position 0 and getCount -1.
                 // Uncomment this, PageIndicator will have trouble.
 //                if (lastSelectedPage != pos) {
-                    lastSelectedPage = pos;
-                    // Post a Runnable in order to be compatible with ViewPagerIndicator because
-                    // onPageSelected is invoked before onPageScrollStateChanged.
-                    AutoScrollViewPager.this.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            listener.onPageSelected(pos);
-                        }
-                    });
+                lastSelectedPage = pos;
+                // Post a Runnable in order to be compatible with ViewPagerIndicator because
+                // onPageSelected is invoked before onPageScrollStateChanged.
+                AutoScrollViewPager.this.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        listener.onPageSelected(pos);
+                    }
+                });
 //                }
             }
         }

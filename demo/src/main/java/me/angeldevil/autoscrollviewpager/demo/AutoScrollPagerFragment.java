@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.nostra13.universalimageloader.core.DisplayImageOptions;
 import com.nostra13.universalimageloader.core.ImageLoader;
@@ -26,6 +27,8 @@ public class AutoScrollPagerFragment extends Fragment {
 
     private DisplayImageOptions options = new DisplayImageOptions.Builder().cacheInMemory(true)
             .cacheOnDisk(true).imageScaleType(ImageScaleType.IN_SAMPLE_INT).build();
+
+    private Toast toast;
 
     public AutoScrollPagerFragment() {
         // Required empty public constructor
@@ -88,5 +91,16 @@ public class AutoScrollPagerFragment extends Fragment {
         pager.setScrollFactgor(5);
         pager.setOffscreenPageLimit(4);
         pager.startAutoScroll(2000);
+        pager.setOnPageClickListener(new AutoScrollViewPager.OnPageClickListener() {
+            @Override
+            public void onPageClick(AutoScrollViewPager autoScrollPager, int position) {
+                if (toast != null) {
+                    toast.cancel();
+                }
+                toast = Toast.makeText(getActivity(), "You clicked page: " + (position + 1),
+                        Toast.LENGTH_SHORT);
+                toast.show();
+            }
+        });
     }
 }
