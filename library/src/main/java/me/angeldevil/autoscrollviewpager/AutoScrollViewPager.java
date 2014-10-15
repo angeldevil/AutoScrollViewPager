@@ -134,7 +134,13 @@ public class AutoScrollViewPager extends ViewPager {
     public int getCurrentItem() {
         int curr = super.getCurrentItem();
         if (wrappedPagerAdapter != null && wrappedPagerAdapter.getCount() > 1) {
-            curr--;
+            if (curr == 0) {
+                curr = wrappedPagerAdapter.getCount() - 1;
+            } else if (curr == wrapperPagerAdapter.getCount() - 1) {
+                curr = 0;
+            } else {
+                curr = curr - 1;
+            }
         }
         return curr;
     }
