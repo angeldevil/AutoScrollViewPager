@@ -79,16 +79,17 @@ public class AutoScrollViewPager extends ViewPager {
     }
 
     public void startAutoScroll() {
-        // Only post scroll message when necessary.
         startAutoScroll(intervalInMillis != 0 ? intervalInMillis : DEFAULT_INTERNAL_IM_MILLIS);
     }
 
     public void startAutoScroll(int intervalInMillis) {
         // Only post scroll message when necessary.
         if (getCount() > 1) {
-            autoScroll = true;
             this.intervalInMillis = intervalInMillis;
-            handler.sendEmptyMessageDelayed(MSG_AUTO_SCROLL, intervalInMillis);
+            if (!autoScroll) {
+                autoScroll = true;
+                handler.sendEmptyMessageDelayed(MSG_AUTO_SCROLL, intervalInMillis);
+            }
         }
     }
 
