@@ -170,7 +170,6 @@ public class AutoScrollViewPager extends ViewPager {
     public boolean onTouchEvent(MotionEvent ev) {
         switch (MotionEventCompat.getActionMasked(ev)) {
             case MotionEvent.ACTION_DOWN:
-                getParent().requestDisallowInterceptTouchEvent(true);
                 if (getCurrentItemOfWrapper() + 1 == getCountOfWrapper()) {
                     setCurrentItem(0, false);
                 } else if (getCurrentItemOfWrapper() == 0) {
@@ -189,7 +188,6 @@ public class AutoScrollViewPager extends ViewPager {
                 }
                 break;
             case MotionEvent.ACTION_UP:
-                getParent().requestDisallowInterceptTouchEvent(false);
                 if (autoScroll) {
                     startAutoScroll();
                 }
