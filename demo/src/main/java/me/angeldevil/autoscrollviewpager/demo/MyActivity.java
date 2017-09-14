@@ -4,12 +4,12 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 
 import com.nostra13.universalimageloader.core.ImageLoader;
 import com.nostra13.universalimageloader.core.ImageLoaderConfiguration;
 
-public class MyActivity extends ActionBarActivity {
+public class MyActivity extends AppCompatActivity {
 
     private ViewPager contentPager;
     
@@ -21,7 +21,7 @@ public class MyActivity extends ActionBarActivity {
         ImageLoaderConfiguration configuration = new ImageLoaderConfiguration.Builder(this).build();
         ImageLoader.getInstance().init(configuration);
 
-        contentPager = (ViewPager) findViewById(R.id.pager);
+        contentPager = findViewById(R.id.pager);
         contentPager.setOffscreenPageLimit(2);
         contentPager.setAdapter(new FragmentPagerAdapter(getSupportFragmentManager()) {
             @Override
