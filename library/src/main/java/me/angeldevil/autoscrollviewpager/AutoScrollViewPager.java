@@ -1,9 +1,9 @@
 package me.angeldevil.autoscrollviewpager;
 
 import android.content.Context;
+import android.database.DataSetObserver;
 import android.os.Handler;
 import android.os.Message;
-import android.support.v4.view.MotionEventCompat;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
@@ -12,8 +12,9 @@ import android.view.ViewConfiguration;
 import android.view.animation.Interpolator;
 
 import java.lang.reflect.Field;
+import java.util.LinkedList;
+import java.util.List;
 
-// TODO add attr support?
 public class AutoScrollViewPager extends ViewPager {
 
     public interface OnPageClickListener {
@@ -25,9 +26,12 @@ public class AutoScrollViewPager extends ViewPager {
 
     private PagerAdapter wrappedPagerAdapter;
     private PagerAdapter wrapperPagerAdapter;
-    private InnerOnPageChangeListener listener;
+    private OnPageChangeListener mOnPageChangeListener;
+    private List<OnPageChangeListener> mOnPageChangeListeners = new LinkedList<>();
     private AutoScrollFactorScroller scroller;
     private H handler;
+
+    private InnerDataSetObserver mObserver = new InnerDataSetObserver();
 
     private boolean autoScroll = false;
     private int intervalInMillis;
@@ -65,8 +69,7 @@ public class AutoScrollViewPager extends ViewPager {
     }
 
     private void init() {
-        listener = new InnerOnPageChangeListener();
-        super.setOnPageChangeListener(listener);
+        super.addOnPageChangeListener(new InnerOnPageChangeListener());
 
         handler = new H();
         touchSlop = ViewConfiguration.get(getContext()).getScaledTouchSlop();
@@ -75,7 +78,7 @@ public class AutoScrollViewPager extends ViewPager {
     @Override
     protected void onDetachedFromWindow() {
         super.onDetachedFromWindow();
-        handler.removeMessages(MSG_AUTO_SCROLL);
+        pauseAutoScroll();
     }
 
     public void startAutoScroll() {
@@ -87,14 +90,14 @@ public class AutoScrollViewPager extends ViewPager {
         if (getCount() > 1) {
             this.intervalInMillis = intervalInMillis;
             autoScroll = true;
-            handler.removeMessages(MSG_AUTO_SCROLL);
+            pauseAutoScroll();
             handler.sendEmptyMessageDelayed(MSG_AUTO_SCROLL, intervalInMillis);
         }
     }
 
     public void stopAutoScroll() {
         autoScroll = false;
-        handler.removeMessages(MSG_AUTO_SCROLL);
+        pauseAutoScroll();
     }
 
     public void setInterval(int intervalInMillis) {
@@ -106,14 +109,52 @@ public class AutoScrollViewPager extends ViewPager {
         scroller.setFactor(factor);
     }
 
+    public OnPageClickListener getOnPageClickListener() {
+        return onPageClickListener;
+    }
+
+    public void setOnPageClickListener(OnPageClickListener onPageClickListener) {
+        this.onPageClickListener = onPageClickListener;
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasWindowFocus) {
+        super.onWindowFocusChanged(hasWindowFocus);
+        if (autoScroll) {
+            if (hasWindowFocus) {
+                startAutoScroll();
+            } else {
+                pauseAutoScroll();
+            }
+        }
+    }
+
+    @SuppressWarnings("deprecation")
     @Override
     public void setOnPageChangeListener(OnPageChangeListener listener) {
-        this.listener.setOnPageChangeListener(listener);
+        mOnPageChangeListener = listener;
+    }
+
+    @Override
+    public void addOnPageChangeListener(OnPageChangeListener listener) {
+        mOnPageChangeListeners.add(listener);
+    }
+
+    @Override
+    public void clearOnPageChangeListeners() {
+        super.clearOnPageChangeListeners();
+        mOnPageChangeListeners.clear();
     }
 
     @Override
     public void setAdapter(PagerAdapter adapter) {
+        if (wrappedPagerAdapter != null && mObserver != null) {
+            wrappedPagerAdapter.unregisterDataSetObserver(mObserver);
+        }
         wrappedPagerAdapter = adapter;
+        if (wrappedPagerAdapter != null && mObserver != null) {
+            wrappedPagerAdapter.registerDataSetObserver(mObserver);
+        }
         wrapperPagerAdapter = (wrappedPagerAdapter == null) ? null : new AutoScrollPagerAdapter(adapter);
         super.setAdapter(wrapperPagerAdapter);
 
@@ -158,31 +199,24 @@ public class AutoScrollViewPager extends ViewPager {
         return curr;
     }
 
-    public OnPageClickListener getOnPageClickListener() {
-        return onPageClickListener;
-    }
-
-    public void setOnPageClickListener(OnPageClickListener onPageClickListener) {
-        this.onPageClickListener = onPageClickListener;
-    }
-
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
-        switch (MotionEventCompat.getActionMasked(ev)) {
+        switch (ev.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
                 if (getCurrentItemOfWrapper() + 1 == getCountOfWrapper()) {
                     setCurrentItem(0, false);
                 } else if (getCurrentItemOfWrapper() == 0) {
                     setCurrentItem(getCount() - 1, false);
                 }
-                handler.removeMessages(MSG_AUTO_SCROLL);
+                pauseAutoScroll();
                 mInitialMotionX = ev.getX();
                 mInitialMotionY = ev.getY();
                 break;
             case MotionEvent.ACTION_MOVE:
                 mLastMotionX = ev.getX();
                 mLastMotionY = ev.getY();
-                if ((int) Math.abs(mLastMotionX - mInitialMotionX) > touchSlop || (int) Math.abs(mLastMotionY - mInitialMotionY) > touchSlop) {
+                if ((int) Math.abs(mLastMotionX - mInitialMotionX) > touchSlop
+                        || (int) Math.abs(mLastMotionY - mInitialMotionY) > touchSlop) {
                     mInitialMotionX = 0.0f;
                     mInitialMotionY = 0.0f;
                 }
@@ -266,19 +300,14 @@ public class AutoScrollViewPager extends ViewPager {
         }
     }
 
+    private void pauseAutoScroll() {
+        handler.removeMessages(MSG_AUTO_SCROLL);
+    }
+
     private class InnerOnPageChangeListener implements OnPageChangeListener {
-        private OnPageChangeListener listener;
-        private int lastSelectedPage = -1;
+        private int mLastSelectedPage = -1;
 
-        public InnerOnPageChangeListener() {
-        }
-
-        public InnerOnPageChangeListener(OnPageChangeListener listener) {
-            setOnPageChangeListener(listener);
-        }
-
-        public void setOnPageChangeListener(OnPageChangeListener listener) {
-            this.listener = listener;
+        private InnerOnPageChangeListener() {
         }
 
         @Override
@@ -292,22 +321,27 @@ public class AutoScrollViewPager extends ViewPager {
                     setCurrentItem(0, false);
                 }
             }
-            if (listener != null) {
-                listener.onPageScrollStateChanged(state);
+            if (mOnPageChangeListener != null) {
+                mOnPageChangeListener.onPageScrollStateChanged(state);
+            }
+            for (OnPageChangeListener onPageChangeListener : mOnPageChangeListeners) {
+                onPageChangeListener.onPageScrollStateChanged(state);
             }
         }
 
         @Override
         public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-            if (listener != null && position > 0 && position < getCount()) {
-                listener.onPageScrolled(position - 1, positionOffset, positionOffsetPixels);
+            if (mOnPageChangeListener != null && position > 0 && position < getCount()) {
+                mOnPageChangeListener.onPageScrolled(position - 1, positionOffset, positionOffsetPixels);
+            }
+            for (OnPageChangeListener onPageChangeListener : mOnPageChangeListeners) {
+                onPageChangeListener.onPageScrolled(position - 1, positionOffset, positionOffsetPixels);
             }
         }
 
         @Override
         public void onPageSelected(final int position) {
-//            if (listener != null && position != 0 && position < wrappedPagerAdapter.getCount() + 1) {
-            if (listener != null) {
+            if (mOnPageChangeListener != null) {
                 final int pos;
                 // Fix position
                 if (position == 0) {
@@ -320,17 +354,35 @@ public class AutoScrollViewPager extends ViewPager {
 
                 // Comment this, onPageSelected will be triggered twice for position 0 and getCount -1.
                 // Uncomment this, PageIndicator will have trouble.
-//                if (lastSelectedPage != pos) {
-                lastSelectedPage = pos;
+//                if (mLastSelectedPage != pos) {
+                mLastSelectedPage = pos;
                 // Post a Runnable in order to be compatible with ViewPagerIndicator because
                 // onPageSelected is invoked before onPageScrollStateChanged.
                 AutoScrollViewPager.this.post(new Runnable() {
                     @Override
                     public void run() {
-                        listener.onPageSelected(pos);
+                        mOnPageChangeListener.onPageSelected(pos);
+                        for (OnPageChangeListener onPageChangeListener : mOnPageChangeListeners) {
+                            onPageChangeListener.onPageSelected(pos);
+                        }
                     }
                 });
-//                }
+            }
+        }
+    }
+
+    private class InnerDataSetObserver extends DataSetObserver {
+        @Override
+        public void onChanged() {
+            if (wrapperPagerAdapter != null) {
+                wrapperPagerAdapter.notifyDataSetChanged();
+            }
+        }
+
+        @Override
+        public void onInvalidated() {
+            if (wrapperPagerAdapter != null) {
+                wrapperPagerAdapter.notifyDataSetChanged();
             }
         }
     }
