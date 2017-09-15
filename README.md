@@ -5,6 +5,23 @@ A ViewPager that can scroll automatically. Compatible with ViewPagerIndicator.
 
 ![](art/demo.gif)
 
+Setup
+========
+
+```
+allprojects {
+  repositories {
+    jcenter()
+  }
+}
+```
+
+```
+dependencies {
+  compile 'me.angeldevil:AutoScrollViewPager:1.0.1'
+}
+```
+
 Usage
 ========
 
