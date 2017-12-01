@@ -1,1 +1,2 @@
-include ':demo', ':library', ':viewpagerindicator'
+include ':demo', ':library'
+project(":library").name = "AutoScrollViewPager"

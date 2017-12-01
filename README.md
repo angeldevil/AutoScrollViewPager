@@ -1,6 +1,8 @@
 AutoScrollViewPager
 ===================
 
+[ ![Download](https://api.bintray.com/packages/angeldevil/Maven/AutoScrollViewPager/images/download.svg) ](https://bintray.com/angeldevil/Maven/AutoScrollViewPager/_latestVersion)
+
 A ViewPager that can scroll automatically. Compatible with ViewPagerIndicator.
 
 ![](art/demo.gif)
@@ -18,7 +20,7 @@ allprojects {
 
 ```
 dependencies {
-  compile 'me.angeldevil:AutoScrollViewPager:1.0.1'
+  compile 'me.angeldevil:AutoScrollViewPager:1.0.5'
 }
 ```
 
