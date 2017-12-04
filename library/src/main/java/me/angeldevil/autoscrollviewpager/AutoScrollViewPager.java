@@ -81,6 +81,14 @@ public class AutoScrollViewPager extends ViewPager {
         pauseAutoScroll();
     }
 
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        if (autoScroll) {
+            startAutoScroll();
+        }
+    }
+
     public void startAutoScroll() {
         startAutoScroll(intervalInMillis != 0 ? intervalInMillis : DEFAULT_INTERNAL_IM_MILLIS);
     }
@@ -104,7 +112,7 @@ public class AutoScrollViewPager extends ViewPager {
         this.intervalInMillis = intervalInMillis;
     }
 
-    public void setScrollFactgor(double factor) {
+    public void setScrollFactor(double factor) {
         setScrollerIfNeeded();
         scroller.setFactor(factor);
     }

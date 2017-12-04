@@ -1,7 +1,7 @@
 apply plugin: 'com.android.library'
 
 group = 'me.angeldevil'
-version = "1.0.5"
+version = "1.0.6"
 
 android {
     compileSdkVersion 26
@@ -10,8 +10,8 @@ android {
     defaultConfig {
         minSdkVersion 14
         targetSdkVersion 26
-        versionCode 6
-        versionName "1.0.5"
+        versionCode 7
+        versionName "1.0.6"
     }
     buildTypes {
         release {

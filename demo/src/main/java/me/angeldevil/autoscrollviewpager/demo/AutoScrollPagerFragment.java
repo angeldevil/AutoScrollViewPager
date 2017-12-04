@@ -88,7 +88,7 @@ public class AutoScrollPagerFragment extends Fragment {
         indicator.setViewPager(pager);
         indicator.setSnap(true);
 
-        pager.setScrollFactgor(5);
+        pager.setScrollFactor(5);
         pager.setOffscreenPageLimit(4);
         pager.startAutoScroll(2000);
         pager.setOnPageClickListener(new AutoScrollViewPager.OnPageClickListener() {

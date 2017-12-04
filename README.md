@@ -20,7 +20,7 @@ allprojects {
 
 ```
 dependencies {
-  compile 'me.angeldevil:AutoScrollViewPager:1.0.5'
+  compile 'me.angeldevil:AutoScrollViewPager:1.0.6'
 }
 ```
 
