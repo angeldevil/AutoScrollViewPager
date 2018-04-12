@@ -17,6 +17,8 @@ import java.util.List;
 
 public class AutoScrollViewPager extends ViewPager {
 
+    private InnerOnPageChangeListener innerOnPageChangeListener = new InnerOnPageChangeListener();;
+
     public interface OnPageClickListener {
         void onPageClick(AutoScrollViewPager pager, int position);
     }
@@ -38,8 +40,6 @@ public class AutoScrollViewPager extends ViewPager {
 
     private float mInitialMotionX;
     private float mInitialMotionY;
-    private float mLastMotionX;
-    private float mLastMotionY;
     private int touchSlop;
     private OnPageClickListener onPageClickListener;
 
@@ -69,7 +69,7 @@ public class AutoScrollViewPager extends ViewPager {
     }
 
     private void init() {
-        super.addOnPageChangeListener(new InnerOnPageChangeListener());
+        super.addOnPageChangeListener(innerOnPageChangeListener);
 
         handler = new H();
         touchSlop = ViewConfiguration.get(getContext()).getScaledTouchSlop();
@@ -152,6 +152,7 @@ public class AutoScrollViewPager extends ViewPager {
     public void clearOnPageChangeListeners() {
         super.clearOnPageChangeListeners();
         mOnPageChangeListeners.clear();
+        super.addOnPageChangeListener(innerOnPageChangeListener);
     }
 
     @Override
@@ -166,14 +167,7 @@ public class AutoScrollViewPager extends ViewPager {
         wrapperPagerAdapter = (wrappedPagerAdapter == null) ? null : new AutoScrollPagerAdapter(adapter);
         super.setAdapter(wrapperPagerAdapter);
 
-        if (adapter != null && adapter.getCount() != 0) {
-            post(new Runnable() {
-                @Override
-                public void run() {
-                    setCurrentItem(0, false);
-                }
-            });
-        }
+        setCurrentItem(0, false);
     }
 
     @Override
@@ -221,10 +215,10 @@ public class AutoScrollViewPager extends ViewPager {
                 mInitialMotionY = ev.getY();
                 break;
             case MotionEvent.ACTION_MOVE:
-                mLastMotionX = ev.getX();
-                mLastMotionY = ev.getY();
-                if ((int) Math.abs(mLastMotionX - mInitialMotionX) > touchSlop
-                        || (int) Math.abs(mLastMotionY - mInitialMotionY) > touchSlop) {
+                float lastMotionX = ev.getX();
+                float lastMotionY = ev.getY();
+                if ((int) Math.abs(lastMotionX - mInitialMotionX) > touchSlop
+                        || (int) Math.abs(lastMotionY - mInitialMotionY) > touchSlop) {
                     mInitialMotionX = 0.0f;
                     mInitialMotionY = 0.0f;
                 }
@@ -246,15 +240,13 @@ public class AutoScrollViewPager extends ViewPager {
                     });
                 }
 
-                mLastMotionX = ev.getX();
-                mLastMotionY = ev.getY();
+                lastMotionX = ev.getX();
+                lastMotionY = ev.getY();
                 if ((int) mInitialMotionX != 0 && (int) mInitialMotionY != 0) {
-                    if ((int) Math.abs(mLastMotionX - mInitialMotionX) < touchSlop
-                            && (int) Math.abs(mLastMotionY - mInitialMotionY) < touchSlop) {
+                    if ((int) Math.abs(lastMotionX - mInitialMotionX) < touchSlop
+                            && (int) Math.abs(lastMotionY - mInitialMotionY) < touchSlop) {
                         mInitialMotionX = 0.0f;
                         mInitialMotionY = 0.0f;
-                        mLastMotionX = 0.0f;
-                        mLastMotionY = 0.0f;
                         if (onPageClickListener != null) {
                             onPageClickListener.onPageClick(this, getCurrentItem());
                         }
@@ -349,7 +341,7 @@ public class AutoScrollViewPager extends ViewPager {
 
         @Override
         public void onPageSelected(final int position) {
-            if (mOnPageChangeListener != null) {
+            if (mOnPageChangeListener != null || mOnPageChangeListeners.size() > 0) {
                 final int pos;
                 // Fix position
                 if (position == 0) {
@@ -360,21 +352,15 @@ public class AutoScrollViewPager extends ViewPager {
                     pos = position - 1;
                 }
 
-                // Comment this, onPageSelected will be triggered twice for position 0 and getCount -1.
-                // Uncomment this, PageIndicator will have trouble.
-//                if (mLastSelectedPage != pos) {
-                mLastSelectedPage = pos;
-                // Post a Runnable in order to be compatible with ViewPagerIndicator because
-                // onPageSelected is invoked before onPageScrollStateChanged.
-                AutoScrollViewPager.this.post(new Runnable() {
-                    @Override
-                    public void run() {
+                if (mLastSelectedPage != pos) {
+                    mLastSelectedPage = pos;
+                    if (mOnPageChangeListener != null) {
                         mOnPageChangeListener.onPageSelected(pos);
-                        for (OnPageChangeListener onPageChangeListener : mOnPageChangeListeners) {
-                            onPageChangeListener.onPageSelected(pos);
-                        }
                     }
-                });
+                    for (OnPageChangeListener onPageChangeListener : mOnPageChangeListeners) {
+                        onPageChangeListener.onPageSelected(pos);
+                    }
+                }
             }
         }
     }

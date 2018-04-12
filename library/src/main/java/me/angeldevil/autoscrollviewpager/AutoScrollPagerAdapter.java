@@ -1,14 +1,15 @@
 package me.angeldevil.autoscrollviewpager;
 
+import android.os.Parcelable;
 import android.support.v4.view.PagerAdapter;
 import android.view.View;
 import android.view.ViewGroup;
 
-public class AutoScrollPagerAdapter extends PagerAdapter{
+class AutoScrollPagerAdapter extends PagerAdapter {
 
     private PagerAdapter wrappedAdapter;
 
-    public AutoScrollPagerAdapter(PagerAdapter wrapped) {
+    AutoScrollPagerAdapter(PagerAdapter wrapped) {
         wrappedAdapter = wrapped;
     }
 
@@ -49,6 +50,36 @@ public class AutoScrollPagerAdapter extends PagerAdapter{
         return wrappedAdapter.isViewFromObject(view, o);
     }
 
+    @Override
+    public void startUpdate(ViewGroup container) {
+        super.startUpdate(container);
+        if (wrappedAdapter != null) {
+            wrappedAdapter.startUpdate(container);
+        }
+    }
+
+    @Override
+    public void finishUpdate(ViewGroup container) {
+        super.finishUpdate(container);
+        if (wrappedAdapter != null) {
+            wrappedAdapter.startUpdate(container);
+        }
+    }
 
 
+    @Override
+    public void restoreState(Parcelable bundle, ClassLoader classLoader) {
+        if (wrappedAdapter != null) {
+            wrappedAdapter.restoreState(bundle, classLoader);
+        }
+        super.restoreState(bundle, classLoader);
+    }
+
+    @Override
+    public Parcelable saveState() {
+        if (wrappedAdapter != null) {
+            return wrappedAdapter.saveState();
+        }
+        return super.saveState();
+    }
 }

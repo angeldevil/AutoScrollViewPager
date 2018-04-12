@@ -4,15 +4,15 @@ import android.content.Context;
 import android.view.animation.Interpolator;
 import android.widget.Scroller;
 
-public class AutoScrollFactorScroller extends Scroller {
+class AutoScrollFactorScroller extends Scroller {
 
     private double factor = 1;
 
-    public AutoScrollFactorScroller(Context context) {
+    AutoScrollFactorScroller(Context context) {
         super(context);
     }
 
-    public AutoScrollFactorScroller(Context context, Interpolator interpolator) {
+    AutoScrollFactorScroller(Context context, Interpolator interpolator) {
         super(context, interpolator);
     }
 

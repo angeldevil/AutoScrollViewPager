@@ -51,8 +51,7 @@ public class AutoScrollPagerFragment extends Fragment {
         final TextView title = (TextView) getView().findViewById(R.id.title);
         CirclePageIndicator indicator = (CirclePageIndicator) getView().findViewById(R.id.indicator);
 
-        indicator.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
-
+        pager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
             @Override
             public void onPageSelected(int i) {
                 title.setText(titles[i]);
