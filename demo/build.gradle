@@ -1,13 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 26
-    buildToolsVersion "25.0.2"
+    compileSdkVersion 27
+    buildToolsVersion "27.0.3"
 
     defaultConfig {
         applicationId "me.angeldevil.autoscrollviewpager.demo"
         minSdkVersion 14
-        targetSdkVersion 26
+        targetSdkVersion 27
         versionCode 1
         versionName "1.0"
     }
@@ -24,7 +24,7 @@ dependencies {
     compile project(':AutoScrollViewPager')
 
     compile 'com.github.JakeWharton:ViewPagerIndicator:2.4.1'
-    compile 'com.android.support:support-v4:26.0.2'
-    compile 'com.android.support:appcompat-v7:26.0.2'
+    compile 'com.android.support:support-v4:27.0.2'
+    compile 'com.android.support:appcompat-v7:27.0.2'
     compile 'com.nostra13.universalimageloader:universal-image-loader:1.9.3'
 }

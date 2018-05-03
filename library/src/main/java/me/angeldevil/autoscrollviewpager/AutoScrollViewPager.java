@@ -257,6 +257,15 @@ public class AutoScrollViewPager extends ViewPager {
         return super.onTouchEvent(ev);
     }
 
+    @Override
+    public boolean onInterceptTouchEvent(MotionEvent ev) {
+        try {
+            return super.onInterceptTouchEvent(ev);
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
     /**
      * Get current item of the outer wrapper adapter.
      */
