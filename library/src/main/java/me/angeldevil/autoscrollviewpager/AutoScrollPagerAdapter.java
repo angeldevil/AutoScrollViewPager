@@ -1,6 +1,7 @@
 package me.angeldevil.autoscrollviewpager;
 
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 import android.support.v4.view.PagerAdapter;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,8 +30,9 @@ class AutoScrollPagerAdapter extends PagerAdapter {
         return super.getPageTitle(position);
     }
 
+    @NonNull
     @Override
-    public Object instantiateItem(ViewGroup container, int position) {
+    public Object instantiateItem(@NonNull ViewGroup container, int position) {
         if (position == 0) {
             return wrappedAdapter.instantiateItem(container, wrappedAdapter.getCount() - 1);
         } else if (position == wrappedAdapter.getCount() + 1) {
@@ -41,17 +43,17 @@ class AutoScrollPagerAdapter extends PagerAdapter {
     }
 
     @Override
-    public void destroyItem(ViewGroup container, int position, Object object) {
+    public void destroyItem(@NonNull ViewGroup container, int position, @NonNull Object object) {
         wrappedAdapter.destroyItem(container, position, object);
     }
 
     @Override
-    public boolean isViewFromObject(View view, Object o) {
+    public boolean isViewFromObject(@NonNull View view, @NonNull Object o) {
         return wrappedAdapter.isViewFromObject(view, o);
     }
 
     @Override
-    public void startUpdate(ViewGroup container) {
+    public void startUpdate(@NonNull ViewGroup container) {
         super.startUpdate(container);
         if (wrappedAdapter != null) {
             wrappedAdapter.startUpdate(container);
@@ -59,10 +61,10 @@ class AutoScrollPagerAdapter extends PagerAdapter {
     }
 
     @Override
-    public void finishUpdate(ViewGroup container) {
+    public void finishUpdate(@NonNull ViewGroup container) {
         super.finishUpdate(container);
         if (wrappedAdapter != null) {
-            wrappedAdapter.startUpdate(container);
+            wrappedAdapter.finishUpdate(container);
         }
     }
 
