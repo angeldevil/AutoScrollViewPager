@@ -340,11 +340,20 @@ public class AutoScrollViewPager extends ViewPager {
 
         @Override
         public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-            if (mOnPageChangeListener != null && position > 0 && position < getCount()) {
-                mOnPageChangeListener.onPageScrolled(position - 1, positionOffset, positionOffsetPixels);
+            final int pos;
+            // Fix position
+            if (position == 0) {
+                pos = getCount() - 1;
+            } else if (position == getCountOfWrapper() - 1) {
+                pos = 0;
+            } else {
+                pos = position - 1;
+            }
+            if (mOnPageChangeListener != null) {
+                mOnPageChangeListener.onPageScrolled(pos, positionOffset, positionOffsetPixels);
             }
             for (OnPageChangeListener onPageChangeListener : mOnPageChangeListeners) {
-                onPageChangeListener.onPageScrolled(position - 1, positionOffset, positionOffsetPixels);
+                onPageChangeListener.onPageScrolled(pos, positionOffset, positionOffsetPixels);
             }
         }
 

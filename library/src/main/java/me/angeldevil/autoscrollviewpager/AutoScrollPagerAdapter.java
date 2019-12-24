@@ -27,19 +27,36 @@ class AutoScrollPagerAdapter extends PagerAdapter {
 
     @Override
     public CharSequence getPageTitle(int position) {
-        return super.getPageTitle(position);
+        return wrappedAdapter != null
+               ? wrappedAdapter.getPageTitle(getRealPosition(position))
+               : super.getPageTitle(position);
+    }
+
+    @Override
+    public int getItemPosition(@NonNull Object object) {
+        return wrappedAdapter != null ? wrappedAdapter.getItemPosition(object) : super.getItemPosition(object);
+    }
+
+    @Override
+    public float getPageWidth(int position) {
+        return wrappedAdapter != null
+               ? wrappedAdapter.getPageWidth(getRealPosition(position))
+               : super.getPageWidth(position);
+    }
+
+    @Override
+    public void setPrimaryItem(@NonNull ViewGroup container, int position, @NonNull Object object) {
+        if (wrappedAdapter != null) {
+            wrappedAdapter.setPrimaryItem(container, getRealPosition(position), object);
+        } else {
+            super.setPrimaryItem(container, position, object);
+        }
     }
 
     @NonNull
     @Override
     public Object instantiateItem(@NonNull ViewGroup container, int position) {
-        if (position == 0) {
-            return wrappedAdapter.instantiateItem(container, wrappedAdapter.getCount() - 1);
-        } else if (position == wrappedAdapter.getCount() + 1) {
-            return wrappedAdapter.instantiateItem(container, 0);
-        } else {
-            return wrappedAdapter.instantiateItem(container, position - 1);
-        }
+        return wrappedAdapter.instantiateItem(container, getRealPosition(position));
     }
 
     @Override
@@ -83,5 +100,18 @@ class AutoScrollPagerAdapter extends PagerAdapter {
             return wrappedAdapter.saveState();
         }
         return super.saveState();
+    }
+
+    private int getRealPosition(int position) {
+        if (wrappedAdapter != null && wrappedAdapter.getCount() > 1) {
+            if (position == 0) {
+                return wrappedAdapter.getCount() - 1;
+            } else if (position == wrappedAdapter.getCount() + 1) {
+                return 0;
+            } else {
+                return position - 1;
+            }
+        }
+        return position;
     }
 }
